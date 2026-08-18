@@ -1,6 +1,6 @@
 # Word 文档智能审查系统
 
-基于大语言模型（LLM）的 Word 文档智能审查系统。需求文档见 `require.md`（已 gitignore）。
+基于大语言模型（LLM）的 Word 文档智能审查系统。
 
 ## 核心功能
 
@@ -9,21 +9,21 @@
 3. **专有名词补齐**：词库维护（全称 ↔ 简称），自动补全为规范全称
 4. **句意优化**：语句不通、冗余、口语化等改写建议
 
-每条建议支持 **接受 / 拒绝 / 自行修改**，确认后导出修订版 docx（require.md 3.2）。
+每条建议支持 **接受 / 拒绝 / 自行修改**，确认后导出修订版。
 
 ## 技术栈
 
 - 后端：FastAPI + Uvicorn + LangChain
 - 数据库：SQLAlchemy 2.0 + Alembic（开发 SQLite → 生产 PostgreSQL，仅改连接串，见 require.md 5.5）
-- 运行环境：**uv 标准项目工作流**（`pyproject.toml` + `uv.lock`）+ Python 3.14（.venv）
+- 运行环境：**uv 标准项目工作流**（`pyproject.toml` + `uv.lock`）+ Python 3.14
 - 文档处理：python-docx
 
 ## 快速开始
 
-### 方式一：本地开发（uv run）
+### 方式一：uv本地开发
 
 ```bash
-# 1. 安装依赖（按 pyproject.toml + uv.lock 创建 .venv 并安装）
+# 1. 安装依赖
 uv sync
 
 # 2. 配置环境变量（不填密钥则自动用 mock 模式，可先体验全流程）
@@ -41,13 +41,13 @@ npm install
 npm run dev
 ```
 
-首次启动自动写入默认格式规范模板与内置专有名词（幂等）。
+首次启动自动写入默认格式规范模板与内置专有名词。
 
-### 方式二：容器化一键启动（Docker，推荐给他人快速验证）
+### 方式二：容器化部署
 
 ```bash
 # 1. 克隆仓库
-git clone <你的仓库地址> && cd doc-review
+git clone git@github.com:flashoutaa/documentai.git && cd doc-review
 
 # 2. 配置环境变量（填 DEEPSEEK_API_KEY 走真实模型；留空则 mock 模式）
 cp .env.example .env
@@ -61,11 +61,13 @@ docker compose up -d --build
 # 体验：在「文档审查」页上传仓库自带的 examples/sample.docx
 ```
 
-> 详细说明（数据持久化 / 常用命令 / PostgreSQL 切换 / 架构图）见下方「容器化部署（Docker）」章节。
+## 效果展示
+![主页面](examples/pic/主页面.png)
+![审查效果图](examples/pic/审查效果图.png)
 
 ## 接入真实 LLM
 
-当前已配置 **DeepSeek**（`.env` 中 `LLM_PROVIDER=deepseek` + API Key 已填入），默认即走真实模型。
+当前已配置 **DeepSeek**
 
 如需切换：
 
@@ -74,47 +76,12 @@ LLM_PROVIDER=deepseek        # deepseek | openai | tongyi | ollama | mock
 DEEPSEEK_API_KEY=sk-xxx      # 对应 provider 的密钥
 ```
 
-未配置密钥时自动降级为 mock 模式（内置规则引擎），流程不中断。
+未配置密钥时自动降级为 mock 模式（内置规则引擎）。
 
 > 说明：DeepSeek 等 OpenAI 兼容 API 不支持 `response_format=json_schema`，
 > 代码中已显式使用 `with_structured_output(..., method="function_calling")` 获取结构化输出。
 
-## 容器化部署（Docker）
 
-### 前置条件
-
-- 已安装 **Docker** 与 **Docker Compose v2**（`docker compose version` 可验证）
-
-### 快速启动
-
-```bash
-# 1. 克隆仓库
-git clone <你的仓库地址>
-cd doc-review
-
-# 2. 配置环境变量（DeepSeek 密钥；不配置则自动用 mock 模式，可先体验全流程）
-cp .env.example .env
-# 编辑 .env：填 DEEPSEEK_API_KEY=sk-xxx（需要真实审查时）
-
-# 3. 一键构建并启动（首次构建需拉取基础镜像，约几分钟）
-docker compose up -d --build
-
-# 4. 访问
-# 前端页面： http://localhost:8080
-# 后端接口文档： http://localhost:8000/docs
-# 健康检查：   http://localhost:8080/health
-# 体验：在「文档审查」页上传仓库自带的 examples/sample.docx 即可看到四类审查效果
-```
-
-### 常用命令
-
-```bash
-docker compose logs -f backend      # 查看后端日志
-docker compose logs -f frontend     # 查看前端/Nginx日志
-docker compose down                 # 停止（保留数据卷）
-docker compose down -v              # 停止并删除数据卷（数据库/上传/导出全部清空）
-docker compose up -d --build        # 代码更新后重新构建启动
-```
 
 ### 数据持久化
 
@@ -143,16 +110,8 @@ frontend 容器（Nginx）
 
 ## 演示与测试
 
-**克隆后立即体验**：仓库自带示例文档 `examples/sample.docx`（故意埋入错别字、专有名词不完整、格式错误、冗余句式），上传它即可直观看到四类审查效果。
+**克隆后立即体验**：仓库自带示例文档 `examples/sample.docx`，上传即可直观看到四类审查效果。
 
-```bash
-# 示例文档也随时可用脚本重新生成（默认输出 data/sample.docx）
-uv run python -c "from app.scripts.make_sample_docx import build_sample; build_sample()"
-
-# 全流程冒烟测试（上传→审查→处理→导出）
-uv run python -m app.scripts.smoke_test                 # 按 .env 配置走 DeepSeek
-LLM_PROVIDER=mock uv run python -m app.scripts.smoke_test  # 强制 mock（确定性强断言）
-```
 
 ## 项目结构
 
