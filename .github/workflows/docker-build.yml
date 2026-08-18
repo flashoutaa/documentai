@@ -1,0 +1,19 @@
+# ===== CI: 每次 push / PR 时验证两个镜像可成功构建 =====
+name: Build Docker Images
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t doc-review-backend:ci .
+
+      - name: Build frontend image
+        run: docker build -t doc-review-frontend:ci ./frontend

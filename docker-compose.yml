@@ -1,0 +1,54 @@
+# ===== Word 文档智能审查系统 - 容器化编排 =====
+# 使用: docker compose up -d --build
+# 前端: http://localhost:8080   后端 API: http://localhost:8000
+name: doc-review
+
+services:
+  # ---- 后端: FastAPI + LangChain ----
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: doc-review-backend:latest
+    container_name: doc-review-backend
+    # 读取 .env（不存在则用默认值，见下方 environment 与代码内默认配置）
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///./data/app.db}
+      UPLOAD_DIR: ${UPLOAD_DIR:-./data/uploads}
+      EXPORT_DIR: ${EXPORT_DIR:-./data/exports}
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-chat}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+    volumes:
+      # SQLite 数据库 / 上传文件 / 导出文件 持久化到命名卷
+      - app_data:/app/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ---- 前端: Nginx 托管静态页面 + 反向代理后端 ----
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: doc-review-frontend:latest
+    container_name: doc-review-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  app_data:

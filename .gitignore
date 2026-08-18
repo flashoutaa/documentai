@@ -8,8 +8,8 @@ __pycache__/
 
 # 环境与数据
 .env
-# data/
-# *.db
+data/
+*.db
 *.sqlite3
 
 # 系统

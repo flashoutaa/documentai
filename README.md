@@ -20,23 +20,48 @@
 
 ## 快速开始
 
+### 方式一：本地开发（uv run）
+
 ```bash
-# 1. 安装依赖（已装好可跳过；依赖清单见 pyproject.toml，锁定见 uv.lock）
+# 1. 安装依赖（按 pyproject.toml + uv.lock 创建 .venv 并安装）
 uv sync
 
-# 2. 初始化数据库（建表）
-cp .env.example .env          # 按需修改配置
-.venv/bin/alembic upgrade head
+# 2. 配置环境变量（不填密钥则自动用 mock 模式，可先体验全流程）
+cp .env.example .env
 
-# 3. 启动服务（mock 模式，无需 API Key 即可体验全流程）
-.venv/bin/uvicorn app.main:app --reload --port 8000
+# 3. 初始化数据库（建表，首次启动时执行）
+uv run alembic upgrade head
 
-# 4. 访问
-# 接口文档：http://127.0.0.1:8000/docs
-# 健康检查：http://127.0.0.1:8000/health
+# 4. 启动后端（接口文档 http://127.0.0.1:8000/docs）
+uv run uvicorn app.main:app --reload --port 8000
+
+# 5.（可选）另开终端启动前端开发模式，访问 http://localhost:5173
+cd frontend
+npm install
+npm run dev
 ```
 
 首次启动自动写入默认格式规范模板与内置专有名词（幂等）。
+
+### 方式二：容器化一键启动（Docker，推荐给他人快速验证）
+
+```bash
+# 1. 克隆仓库
+git clone <你的仓库地址> && cd doc-review
+
+# 2. 配置环境变量（填 DEEPSEEK_API_KEY 走真实模型；留空则 mock 模式）
+cp .env.example .env
+
+# 3. 一键构建并启动（首次构建约几分钟）
+docker compose up -d --build
+
+# 4. 访问
+# 前端页面：    http://localhost:8080
+# 后端接口文档： http://localhost:8000/docs
+# 体验：在「文档审查」页上传仓库自带的 examples/sample.docx
+```
+
+> 详细说明（数据持久化 / 常用命令 / PostgreSQL 切换 / 架构图）见下方「容器化部署（Docker）」章节。
 
 ## 接入真实 LLM
 
@@ -54,12 +79,79 @@ DEEPSEEK_API_KEY=sk-xxx      # 对应 provider 的密钥
 > 说明：DeepSeek 等 OpenAI 兼容 API 不支持 `response_format=json_schema`，
 > 代码中已显式使用 `with_structured_output(..., method="function_calling")` 获取结构化输出。
 
-## 演示与测试
+## 容器化部署（Docker）
+
+### 前置条件
+
+- 已安装 **Docker** 与 **Docker Compose v2**（`docker compose version` 可验证）
+
+### 快速启动
 
 ```bash
-# 生成带典型问题的示例文档 + 全流程冒烟测试（上传→审查→处理→导出）
-.venv/bin/python -m app.scripts.smoke_test                 # 按 .env 配置走 DeepSeek
-LLM_PROVIDER=mock .venv/bin/python -m app.scripts.smoke_test  # 强制 mock（确定性强断言）
+# 1. 克隆仓库
+git clone <你的仓库地址>
+cd doc-review
+
+# 2. 配置环境变量（DeepSeek 密钥；不配置则自动用 mock 模式，可先体验全流程）
+cp .env.example .env
+# 编辑 .env：填 DEEPSEEK_API_KEY=sk-xxx（需要真实审查时）
+
+# 3. 一键构建并启动（首次构建需拉取基础镜像，约几分钟）
+docker compose up -d --build
+
+# 4. 访问
+# 前端页面： http://localhost:8080
+# 后端接口文档： http://localhost:8000/docs
+# 健康检查：   http://localhost:8080/health
+# 体验：在「文档审查」页上传仓库自带的 examples/sample.docx 即可看到四类审查效果
+```
+
+### 常用命令
+
+```bash
+docker compose logs -f backend      # 查看后端日志
+docker compose logs -f frontend     # 查看前端/Nginx日志
+docker compose down                 # 停止（保留数据卷）
+docker compose down -v              # 停止并删除数据卷（数据库/上传/导出全部清空）
+docker compose up -d --build        # 代码更新后重新构建启动
+```
+
+### 数据持久化
+
+- SQLite 数据库、上传的文档、导出的修订版都存放在 Docker 命名卷 `app_data`（挂载到容器内 `/app/data`），**容器重建不丢失**。
+
+### 切换到 PostgreSQL（生产推荐）
+
+```bash
+docker compose -f docker-compose.yml -f compose.postgres.yml up -d --build
+# 多出一个 postgres 容器，后端自动改用 PostgreSQL（业务代码零改动，见 require.md 5.5）
+```
+
+### 部署架构
+
+```
+浏览器
+  │ :8080
+  ▼
+frontend 容器（Nginx）
+  ├── 托管 Vue 静态页面（SPA）
+  └── /api → 反向代理 → backend:8000
+                           │
+                           └── 数据卷 app_data（SQLite/上传/导出）
+（可选）postgres 容器 ← DATABASE_URL 指向 ← backend
+```
+
+## 演示与测试
+
+**克隆后立即体验**：仓库自带示例文档 `examples/sample.docx`（故意埋入错别字、专有名词不完整、格式错误、冗余句式），上传它即可直观看到四类审查效果。
+
+```bash
+# 示例文档也随时可用脚本重新生成（默认输出 data/sample.docx）
+uv run python -c "from app.scripts.make_sample_docx import build_sample; build_sample()"
+
+# 全流程冒烟测试（上传→审查→处理→导出）
+uv run python -m app.scripts.smoke_test                 # 按 .env 配置走 DeepSeek
+LLM_PROVIDER=mock uv run python -m app.scripts.smoke_test  # 强制 mock（确定性强断言）
 ```
 
 ## 项目结构

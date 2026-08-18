@@ -1,0 +1,14 @@
+.git
+.venv
+data
+.env
+.env.*
+!.env.example
+frontend
+node_modules
+__pycache__
+*.pyc
+.pytest_cache
+.npm-cache
+.uv-cache*
+dist

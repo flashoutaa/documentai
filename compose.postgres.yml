@@ -1,0 +1,29 @@
+# ===== 可选: 切换到 PostgreSQL（require.md 5.5 生产部署）=====
+# 使用: docker compose -f docker-compose.yml -f compose.postgres.yml up -d --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: doc-review-postgres
+    environment:
+      POSTGRES_USER: docreview
+      POSTGRES_PASSWORD: docreview
+      POSTGRES_DB: docreview
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docreview -d docreview"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # 覆盖后端配置：数据库切换为 PostgreSQL，仅改连接串（业务代码零改动）
+  backend:
+    environment:
+      DATABASE_URL: postgresql+psycopg://docreview:docreview@postgres:5432/docreview
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pg_data:
