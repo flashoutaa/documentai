@@ -15,14 +15,14 @@
 
 - 后端：FastAPI + Uvicorn + LangChain
 - 数据库：SQLAlchemy 2.0 + Alembic（开发 SQLite → 生产 PostgreSQL，仅改连接串，见 require.md 5.5）
-- 运行环境：uv + Python 3.14（.venv）
+- 运行环境：**uv 标准项目工作流**（`pyproject.toml` + `uv.lock`）+ Python 3.14（.venv）
 - 文档处理：python-docx
 
 ## 快速开始
 
 ```bash
-# 1. 安装依赖（已装好可跳过）
-uv pip install -r requirements.txt --python .venv/bin/python
+# 1. 安装依赖（已装好可跳过；依赖清单见 pyproject.toml，锁定见 uv.lock）
+uv sync
 
 # 2. 初始化数据库（建表）
 cp .env.example .env          # 按需修改配置

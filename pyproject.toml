@@ -1,0 +1,30 @@
+[project]
+name = "doc-review"
+version = "0.1.0"
+description = "基于大模型的 Word 文档智能审查系统（FastAPI + LangChain + uv）"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    # 后端框架
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    # LLM 编排
+    "langchain>=0.3",
+    "langchain-openai>=0.2",
+    "langchain-community>=0.3",
+    # 数据库（SQLite 开发 / PostgreSQL 生产，见 require.md 5.5）
+    "sqlalchemy>=2.0.40",
+    "alembic>=1.14",
+    "psycopg[binary]>=3.2",
+    # 文档处理
+    "python-docx>=1.1",
+    # 配置与校验
+    "pydantic>=2.11",
+    "pydantic-settings>=2.6",
+    "python-multipart>=0.0.12",
+    "python-dotenv>=1.0",
+]
+
+[tool.uv]
+# 非打包项目（纯应用），不构建发行包
+package = false
