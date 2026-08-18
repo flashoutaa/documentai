@@ -91,17 +91,23 @@ onMounted(() => {
       </el-form>
       <el-upload
         drag
-        :auto-upload="false"
+        :auto-upload="true"
         :show-file-list="false"
         :before-upload="beforeUpload"
         :http-request="onUpload"
         accept=".docx"
         :disabled="uploading"
+        :multiple="false"
       >
         <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
-        <div class="el-upload__text">将 .docx 文件拖到此处，或 <em>点击上传</em></div>
+        <div class="el-upload__text">
+          <template v-if="uploading">正在上传…</template>
+          <template v-else>将 .docx 文件拖到此处，或 <em>点击选择文件</em>（选择后自动上传）</template>
+        </div>
         <template #tip>
-          <div class="el-upload__tip">上传后选择审查类型与规范模板，进入审查结果页逐条确认（接受 / 拒绝 / 自行修改）</div>
+          <div class="el-upload__tip">
+            选择或拖入 .docx 文件后立即上传，上传成功后自动出现在下方文档列表；可点击文件名预览内容，再「开始审查」
+          </div>
         </template>
       </el-upload>
     </el-card>

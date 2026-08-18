@@ -31,6 +31,7 @@ export const importTerms = (items) => http.post('/terms/import', { items })
 export const createTask = (data) => http.post('/tasks', data)
 export const getTask = (id) => http.get(`/tasks/${id}`)
 export const listTasks = () => http.get('/tasks')
+export const getReviewDetail = (id) => http.get(`/tasks/${id}/review`)
 
 // ===== 建议 =====
 export const listSuggestions = (taskId, params) => http.get('/suggestions', { params: { task_id: taskId, ...params } })

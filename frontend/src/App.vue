@@ -4,9 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 
-const active = () => route.path
+const active = () => (route.path.startsWith('/review') ? '/reviews' : route.path)
 const menus = [
   { path: '/', label: '文档审查' },
+  { path: '/reviews', label: '审查结果' },
   { path: '/templates', label: '格式规范' },
   { path: '/terms', label: '专有名词库' },
 ]

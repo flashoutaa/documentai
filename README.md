@@ -95,6 +95,7 @@ data/                       # sqlite、上传、导出（gitignore）
 | GET | /api/v1/documents/{id}/preview | 预览文档内容（结构化段落文本+格式信息） |
 | POST | /api/v1/tasks | 创建审查任务（选类型，后台异步执行） |
 | GET | /api/v1/tasks/{id} | 任务状态与进度 |
+| GET | /api/v1/tasks/{id}/review | 审查详情：原文全文 + 建议在原文中的精确字符位置（供内联对照展示） |
 | GET | /api/v1/suggestions?task_id= | 建议清单（可筛类型/状态） |
 | PATCH | /api/v1/suggestions/{id} | 接受/拒绝/自行修改 |
 | POST | /api/v1/suggestions/batch | 批量处理 |

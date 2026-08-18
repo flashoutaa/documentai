@@ -30,3 +30,10 @@ class TaskOut(BaseModel):
 
 class TaskProgressOut(TaskOut):
     suggestion_counts: dict[str, int] = Field(default_factory=dict)  # 各类型建议数
+
+
+class TaskListItem(TaskOut):
+    """任务列表项（审查结果页）：附带文档名与建议总数。"""
+
+    filename: str | None = None
+    suggestion_total: int = 0
