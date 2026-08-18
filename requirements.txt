@@ -1,0 +1,22 @@
+# ===== 后端框架 =====
+fastapi>=0.115
+uvicorn[standard]>=0.30
+
+# ===== LLM 编排 =====
+langchain>=0.3
+langchain-openai>=0.2
+langchain-community>=0.3
+
+# ===== 数据库 =====
+sqlalchemy>=2.0.40
+alembic>=1.14
+psycopg[binary]>=3.2        # 生产切 PostgreSQL 时使用（psycopg3）
+
+# ===== 文档处理 =====
+python-docx>=1.1
+
+# ===== 配置与校验 =====
+pydantic>=2.11
+pydantic-settings>=2.6
+python-multipart>=0.0.12    # FastAPI 文件上传
+python-dotenv>=1.0

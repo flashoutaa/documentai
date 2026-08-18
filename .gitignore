@@ -1,0 +1,19 @@
+#忽视需求文档
+require.md
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# 环境与数据
+.env
+# data/
+# *.db
+*.sqlite3
+
+# 系统
+.DS_Store
+
+# npm
+.npm-cache/
