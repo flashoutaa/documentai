@@ -62,8 +62,18 @@ docker compose up -d --build
 ```
 
 ## 效果展示
+主页面
 ![主页面](examples/pic/主页面.png)
+已进行AI审查文档清单
+![审查列表](examples/pic/审查列表.png)
+AI审查效果页面
 ![审查效果图](examples/pic/审查效果图.png)
+格式设置页面
+![格式设置](examples/pic/格式设置页面.png)
+专有名词补齐页面
+![专有名词补齐](examples/pic/专有名词补齐.png)
+
+
 
 ## 接入真实 LLM
 
